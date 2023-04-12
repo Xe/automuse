@@ -1,0 +1,26 @@
+{
+  "name": "@xeserv/automuse",
+  "version": "0.0.1",
+  "description": "Xe's automatic novel generation muse using Plotto and ChatGPT",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Xe/automuse.git"
+  },
+  "type": "module",
+  "author": "Xe Iaso <me@xeiaso.net>",
+  "license": "SEE LICENSE IN LICENSE",
+  "bugs": {
+    "url": "https://github.com/Xe/automuse/issues"
+  },
+  "homepage": "https://github.com/Xe/automuse#readme",
+  "devDependencies": {
+    "mocha": "^10.2.0"
+  },
+  "dependencies": {
+    "@xeserv/plottoriffic": "^2.2.0"
+  }
+}
