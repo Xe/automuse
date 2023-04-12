@@ -1,6 +1,40 @@
 {
   "nodes": {
+    "iosevka": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "utils": "utils"
+      },
+      "locked": {
+        "lastModified": 1679684486,
+        "narHash": "sha256-XMpeeKmzxYpkh8uuxyGHcYzgORVysC8vMIVbzQdPtTs=",
+        "owner": "Xe",
+        "repo": "iosevka",
+        "rev": "85a6850cf67884b2d4752442bb9246415681e9e9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Xe",
+        "repo": "iosevka",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
+      "locked": {
+        "lastModified": 1678898370,
+        "narHash": "sha256-xTICr1j+uat5hk9FyuPOFGxpWHdJRibwZC+ATi0RbtE=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ac718d02867a84b42522a0ece52d841188208f2c",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-unstable",
+        "type": "indirect"
+      }
+    },
+    "nixpkgs_2": {
       "locked": {
         "lastModified": 1681217261,
         "narHash": "sha256-RbxCHWN3Vhyv/WEsXcJlDwF7bpvZ9NxDjfSouQxXEKo=",
@@ -17,8 +51,10 @@
     },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs",
-        "utils": "utils"
+        "iosevka": "iosevka",
+        "nixpkgs": "nixpkgs_2",
+        "typst": "typst",
+        "utils": "utils_2"
       }
     },
     "systems": {
@@ -36,7 +72,42 @@
         "type": "github"
       }
     },
+    "typst": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1681296471,
+        "narHash": "sha256-437YmGedi3S8GT7WOQTgruQEl/+QqB/8mOuGpJphjYg=",
+        "owner": "typst",
+        "repo": "typst",
+        "rev": "1198e0cd385737efc38dbd8ba13db802a68e0dc7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "typst",
+        "repo": "typst",
+        "type": "github"
+      }
+    },
     "utils": {
+      "locked": {
+        "lastModified": 1678901627,
+        "narHash": "sha256-U02riOqrKKzwjsxc/400XnElV+UtPUQWpANPlyazjH0=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "93a2b84fc4b70d9e089d029deacc3583435c2ed6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "utils_2": {
       "inputs": {
         "systems": "systems"
       },
