@@ -11,7 +11,7 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             nodejs-18_x
-            deno
+            pandoc
           ];
           shellHook = ''
             export PATH="$PATH":$(pwd)/node_modules/.bin

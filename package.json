@@ -2,9 +2,11 @@
   "name": "@xeserv/automuse",
   "version": "0.0.1",
   "description": "Xe's automatic novel generation muse using Plotto and ChatGPT",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "mocha"
+    "start": "tsc && node dist/index.js",
+    "test": "mocha",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
@@ -18,9 +20,19 @@
   },
   "homepage": "https://github.com/Xe/automuse#readme",
   "devDependencies": {
-    "mocha": "^10.2.0"
+    "@types/node": "^18.15.11",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.1",
+    "mocha": "^10.2.0",
+    "prettier": "2.8.7",
+    "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@xeserv/plottoriffic": "^2.2.0"
+    "@xeserv/plottoriffic": "^2.2.0",
+    "dotenv": "^16.0.3",
+    "openai": "^3.2.1"
+  },
+  "lint-staged": {
+    "*.+(js|ts|json)": "prettier --write --ignore-unknown"
   }
 }

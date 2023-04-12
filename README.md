@@ -5,4 +5,3 @@ own amusement.
 
 > this has got to be the most elaborate way to simulate the monkey
 > typewriters I've ever heard
-
