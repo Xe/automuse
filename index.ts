@@ -104,4 +104,33 @@ program
     summary.chapterList.forEach(({ title, summary }) => console.log(`- ${title} - ${summary}`));
   });
 
+program
+  .command("genChapterScenes <dir>")
+  .description("generate the list of scenes for all of the chapters in the chapter")
+  .action(async (dir) => {
+    if (!fileExists(dir)) {
+      console.error(`${dir} does not exist, run init?`);
+      process.exit(1);
+    }
+    if (!fileExists(`${dir}/summary.json`)) {
+      console.error(`plot summary does not exist in ${dir}, run genSummary?`);
+      process.exit(1);
+    }
+    if (fileExists(`${dir}/chapterScenes.json`)) {
+      console.error(`plot summary already exists in ${dir}`);
+      process.exit(1);
+    }
+
+    const summary: book.Summary = JSON.parse(await fs.readFile(`${dir}/summary.json`, "utf8"));
+    const chapters: book.Chapter[] = [];
+
+    for (const ch of summary.chapterList) {
+      chapters.push(await book.createChapterScenes(dir, openai, summary, ch));
+    }
+
+    console.log(chapters);
+
+    await fs.writeFile(`${dir}/chapterScenes.json`, JSON.stringify(chapters));
+  });
+
 program.parse();

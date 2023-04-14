@@ -10,8 +10,7 @@
     "sourceMap": true,
     "target": "es2022",
     "types": ["node"],
-    "outDir": "dist",
-    "allowImportingTsExtensions": true
+    "outDir": "dist"
   },
   "exclude": ["node_modules"]
 }

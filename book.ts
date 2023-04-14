@@ -145,3 +145,57 @@ export const createAndParseSummary = async (
 
   return bookInfo;
 };
+
+export const createChapterScenes = async (
+  dirName: string,
+  openai: OpenAIApi,
+  summary: Summary,
+  ch: ChapterListItem
+): Promise<Chapter> => {
+  console.log(`creating chapter scene information for chapter ${ch.title}`);
+
+  const prompt =
+    `Given the following plot summary, character information, and chapter information, write descriptions of scenes that would happen in that chapter. End each description with two newlines. Write at least 4 scenes. Use detail and be creative. DO NOT include the chapter title in your output. ONLY output the scenes separated by newlines like this.
+
+What happens first.
+
+What happens after that.
+
+Plot summary: ${summary.plotSummary}
+Character information:
+` +
+    summary.characters.map((char) => `- ${char.name}: ${char.role}`).join("\n") +
+    `
+Chapter title: ${ch.title}
+Chapter summary: ${ch.summary}`;
+
+  const chInfo = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+  });
+
+  const chInfoText = chInfo.data.choices[0].message?.content as string;
+
+  return {
+    title: ch.title,
+    summary: ch.summary,
+    sceneDescriptions: chInfoText.split("\n\n"),
+  };
+};
+
+export const writeChapterScene = async (
+  dirName: string,
+  openai: OpenAIApi,
+  summary: Summary,
+  ch: Chapter,
+  chNum: number,
+  sceneNum: number,
+  scene: string
+): Promise<string> => {
+  return "";
+};
