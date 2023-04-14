@@ -1,89 +1,107 @@
+import { Command } from "commander";
 import * as dotenv from "dotenv";
 import { Configuration, OpenAIApi } from "openai";
-import PlotGenerator from "@xeserv/plottoriffic";
+import PlotGenerator, { Plot } from "@xeserv/plottoriffic";
 import { generateName } from "@kotofurumiya/th-namegen";
 import * as fs from "node:fs/promises";
+import { existsSync as fileExists } from "fs";
+import { readPackage } from "read-pkg";
+
+import * as book from "./book.js";
 
 dotenv.config();
-
-const dirName = `var/${generateName()}`;
-await fs.mkdir(dirName, { recursive: true });
-console.log(`dirName: ${dirName}`);
-
-const pg = new PlotGenerator({ flipGenders: false });
-const plot = pg.generate();
-
-await fs.writeFile(`${dirName}/plotto.json`, JSON.stringify(plot));
+const packageInfo = await readPackage();
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
-const promptBase = `Write me the following about the following plot summary for a novel:
+const program = new Command();
 
-- A two to five word title for the novel starting with "Title: " and followed by two newlines. For example: "Fresh Beginnings" or "Jared's Adventure through Crime".
-- A detailed plot summary for the story starting with "Plot Summary: " and followed by two newlines. The plot summary should be on the same line as the prefix.
-- The string "Chapter Summaries" followed by two newlines.
-- A markdown list of detailed chapter summaries in at least 3 sentences and titles for each of the 10 chapters that a novel based on the plot summary would have. Surround each chapter title in quotes and put a dash after the name like this:
+program
+  .name(packageInfo.name)
+  .description(packageInfo.description as string)
+  .version(packageInfo.version);
 
-- Chapter name - Chapter summary goes here. More words in the summary go here.
-- Second chapter name - Second chapter summary goes here.`;
+program
+  .command("init [dir]")
+  .description("create a new random folder for a book")
+  .action(async (dir = `var/${generateName()}`) => {
+    await fs.mkdir(dir, { recursive: true });
 
-const summary = await openai.createChatCompletion({
-  model: "gpt-3.5-turbo",
-  messages: [
-    {
-      role: "user",
-      content: promptBase + "\n\n" + plot.plot,
-    },
-  ],
-});
-
-if (!!summary.data.usage) {
-  const usage = summary.data.usage;
-  console.log(
-    `${usage.total_tokens} tokens (${usage.prompt_tokens} prompt, ${usage?.completion_tokens} completion)`
-  );
-}
-
-const summaryText = summary.data.choices[0].message?.content;
-
-console.log(summaryText);
-await fs.writeFile(`${dirName}/summary.txt`, summaryText as string);
-
-const titleRegex = /^Title: (.+)$/gm;
-const plotSummaryRegex = /^Plot Summary: (.+)$/gm;
-const chapterSummaryRegex = /^- (.+) - (.+)$/gm;
-
-let title = summaryText?.split("\n", 2)[0].split(titleRegex)[1] as string;
-
-if (title[0] === '"') {
-  title = title.slice(1, -1);
-}
-
-const chapterList = summaryText
-  ?.split("\n\n")
-  .slice(-1)[0]
-  .split("\n")
-  .map((line) => {
-    return line.split(chapterSummaryRegex);
-  })
-  .map((ch) => {
-    ch.shift();
-    ch.pop();
-    return { title: ch[0].slice(1, -1), summary: ch[1] };
+    console.log(`created folder ${dir}`);
   });
 
-const plotSummary = summaryText?.split("\n\n", 3)[1].split(plotSummaryRegex)[1];
+program
+  .command("genPlotto <dir>")
+  .description("generate a new book plotto description")
+  .action(async (dir) => {
+    if (!fileExists(dir)) {
+      console.error(`${dir} does not exist, run init?`);
+      process.exit(1);
+    }
+    if (fileExists(`${dir}/plotto.json`)) {
+      console.error(`plotto data already exists in ${dir}`);
+      process.exit(1);
+    }
 
-plot.cast.forEach(async (ch) => {});
+    const plot = await book.createPlot(dir);
+    console.log(`created plot, subject: ${plot.subject}`);
+  });
 
-const bookInfo = {
-  title,
-  chapterList,
-  plotSummary,
-};
+program
+  .command("showPlotto <dir>")
+  .description("show the plotto description for a book directory")
+  .action(async (dir) => {
+    if (!fileExists(dir)) {
+      console.error(`${dir} does not exist, run init?`);
+      process.exit(1);
+    }
 
-console.log(bookInfo);
-await fs.writeFile(`${dirName}/summary.json`, JSON.stringify(bookInfo));
+    const plot: Plot = JSON.parse(await fs.readFile(`${dir}/plotto.json`, "utf8"));
+    console.log(JSON.stringify(plot, undefined, "  "));
+  });
+
+program
+  .command("genSummary <dir>")
+  .description("generate a new summary based on a plotto description")
+  .action(async (dir) => {
+    if (!fileExists(dir)) {
+      console.error(`${dir} does not exist, run init?`);
+      process.exit(1);
+    }
+    if (fileExists(`${dir}/summary.json`)) {
+      console.error(`plot summary already exists in ${dir}`);
+      process.exit(1);
+    }
+
+    const plot: Plot = JSON.parse(await fs.readFile(`${dir}/plotto.json`, "utf8"));
+
+    const summary = await book.createAndParseSummary(dir, openai, plot);
+
+    console.log(`generated book summary`);
+  });
+
+program
+  .command("showSummary <dir>")
+  .description("dump high-level details about a plot summary")
+  .action(async (dir) => {
+    if (!fileExists(dir)) {
+      console.error(`${dir} does not exist, run init?`);
+      process.exit(1);
+    }
+    if (!fileExists(`${dir}/summary.json`)) {
+      console.error(`plot summary does not exist in ${dir}, run genSummary?`);
+      process.exit(1);
+    }
+
+    const summary: book.Summary = JSON.parse(await fs.readFile(`${dir}/summary.json`, "utf8"));
+
+    console.log(`title: ${summary.title}\n${summary.plotSummary}\n\ncharacters:`);
+    summary.characters.forEach((ch) => console.log(`- ${ch.name}: ${ch.role}`));
+    console.log("\nchapters:");
+    summary.chapterList.forEach(({ title, summary }) => console.log(`- ${title} - ${summary}`));
+  });
+
+program.parse();

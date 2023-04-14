@@ -2,7 +2,7 @@
   // https://www.typescriptlang.org/tsconfig#compilerOptions
   "compilerOptions": {
     "esModuleInterop": true,
-    "lib": ["es2020", "dom"],
+    "lib": ["es2020", "es2022", "dom"],
     "module": "es2022",
     "preserveConstEnums": true,
     "moduleResolution": "node",
@@ -10,7 +10,8 @@
     "sourceMap": true,
     "target": "es2022",
     "types": ["node"],
-    "outDir": "dist"
+    "outDir": "dist",
+    "allowImportingTsExtensions": true
   },
   "exclude": ["node_modules"]
 }
