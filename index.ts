@@ -1,11 +1,12 @@
 import { Command } from "commander";
 import * as dotenv from "dotenv";
 import { Configuration, OpenAIApi } from "openai";
-import PlotGenerator, { Plot } from "@xeserv/plottoriffic";
+import { Plot } from "@xeserv/plottoriffic";
 import { generateName } from "@kotofurumiya/th-namegen";
 import * as fs from "node:fs/promises";
 import { existsSync as fileExists } from "fs";
 import { readPackage } from "read-pkg";
+import { execa } from "execa";
 
 import * as book from "./book.js";
 
@@ -177,6 +178,46 @@ program
 
     console.log(fnames);
     await fs.writeFile(`${dir}/fnames.json`, JSON.stringify(fnames, undefined, "  "));
+  });
+
+program
+  .command("buildEbook <dir>")
+  .description("generate the .epub file for the novel")
+  .action(async (dir) => {
+    if (!fileExists(dir)) {
+      console.error(`${dir} does not exist, run init?`);
+      process.exit(1);
+    }
+    if (!fileExists(`${dir}/summary.json`)) {
+      console.error(`plot summary does not exist in ${dir}, run genSummary?`);
+      process.exit(1);
+    }
+    if (!fileExists(`${dir}/fnames.json`)) {
+      console.error(`file name list doesn't exist in ${dir}, run writeScenes?`);
+      process.exit(1);
+    }
+
+    const summary: book.Summary = JSON.parse(await fs.readFile(`${dir}/summary.json`, "utf8"));
+    const fnames: string[] = JSON.parse(await fs.readFile(`${dir}/fnames.json`, "utf8"));
+
+    await fs.writeFile(
+      `${dir}/src/title.txt`,
+      `---
+title: "${summary.title}"
+author: Midori Yasomi
+rights: All rights reserved
+language: en-US
+---
+`
+    );
+
+    await fs.writeFile(`${dir}/src/aboutAuthor.txt`, "---\n\n" + book.authorBio);
+
+    let args = ["-o", `${dir}/ebook.epub`, "--to", "epub", `${dir}/src/title.txt`];
+    args = args.concat(fnames.map((fname) => `${dir}/src/${fname}`));
+    args = args.concat([`${dir}/src/aboutAuthor.txt`]);
+
+    console.log(await execa("pandoc", args));
   });
 
 program.parse();
