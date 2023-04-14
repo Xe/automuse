@@ -29,6 +29,7 @@ program
   .description("create a new random folder for a book")
   .action(async (dir = `var/${generateName()}`) => {
     await fs.mkdir(dir, { recursive: true });
+    await fs.mkdir(`${dir}/src`, { recursive: true });
 
     console.log(`created folder ${dir}`);
   });
@@ -131,6 +132,44 @@ program
     console.log(chapters);
 
     await fs.writeFile(`${dir}/chapterScenes.json`, JSON.stringify(chapters));
+  });
+
+program
+  .command("writeScenes <dir>")
+  .description("write individual scenes to the disk in full detail (expensive command)")
+  .action(async (dir) => {
+    if (!fileExists(dir)) {
+      console.error(`${dir} does not exist, run init?`);
+      process.exit(1);
+    }
+    if (!fileExists(`${dir}/summary.json`)) {
+      console.error(`plot summary does not exist in ${dir}, run genSummary?`);
+      process.exit(1);
+    }
+    if (!fileExists(`${dir}/chapterScenes.json`)) {
+      console.error(`plot summary does not exist in ${dir}, run genChapterScenes?`);
+      process.exit(1);
+    }
+
+    await fs.mkdir(`${dir}/src`, { recursive: true });
+
+    const summary: book.Summary = JSON.parse(await fs.readFile(`${dir}/summary.json`, "utf8"));
+    const chapters: book.Chapter[] = JSON.parse(
+      await fs.readFile(`${dir}/chapterScenes.json`, "utf8")
+    );
+
+    const fnames: string[] = [];
+
+    for (let [chNum, ch] of chapters.entries()) {
+      chNum = chNum + 1;
+      await fs.writeFile(`${dir}/src/ch-${chNum}-sc-00.md`, `# ${ch.title}\n\n`);
+      for (let [sceneNum, scene] of ch.sceneDescriptions.entries()) {
+        sceneNum = sceneNum + 1;
+        fnames.push(await book.writeChapterScene(dir, openai, summary, ch, chNum, sceneNum, scene));
+      }
+    }
+
+    console.log(fnames);
   });
 
 program.parse();

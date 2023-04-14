@@ -2,6 +2,8 @@ import * as fs from "node:fs/promises";
 import { OpenAIApi } from "openai";
 import PlotGenerator, { Plot } from "@xeserv/plottoriffic";
 
+export const authorBio = `Yasomi Midori is a science fiction author who explores the themes of identity, memory, and technology in her novels. Her debut novel “The Memory Thief” was a critically acclaimed bestseller that captivated readers with its thrilling plot and complex characters. Yasomi also contributes to the Xe Iaso blog as the character Mimi, a hacker and activist who exposes the secrets of the powerful corporations that control the world. Yasomi was born and raised in Tokyo, Japan, where she developed a passion for reading and writing at an early age. She studied computer science and literature at the University of Tokyo, and worked as a software engineer before becoming a full-time writer. She lives in Kyoto with her husband and two cats.`;
+
 export interface ChapterListItem {
   title: string;
   summary: string;
@@ -155,7 +157,7 @@ export const createChapterScenes = async (
   console.log(`creating chapter scene information for chapter ${ch.title}`);
 
   const prompt =
-    `Given the following plot summary, character information, and chapter information, write descriptions of scenes that would happen in that chapter. End each description with two newlines. Write at least 4 scenes. Use detail and be creative. DO NOT include the chapter title in your output. ONLY output the scenes separated by newlines like this.
+    `Given the following plot summary, character information, and chapter information, write descriptions of scenes that would happen in that chapter. End each description with two newlines. Write at least 4 scenes. DO NOT only write one scene. Use detail and be creative. DO NOT include the chapter title in your output. ONLY output the scenes separated by newlines like this.
 
 What happens first.
 
@@ -188,6 +190,7 @@ Chapter summary: ${ch.summary}`;
   };
 };
 
+// https://pandoc.org/epub.html
 export const writeChapterScene = async (
   dirName: string,
   openai: OpenAIApi,
@@ -197,5 +200,37 @@ export const writeChapterScene = async (
   sceneNum: number,
   scene: string
 ): Promise<string> => {
-  return "";
+  const prompt =
+    `Given the following information, write the scene of the novel. Be detailed about the setting and character descriptions. End each paragraph with two newlines. Write many sentences. ONLY return the text of the novel.
+` +
+    summary.characters.map((char) => `- ${char.name}: ${char.role}`).join("\n") +
+    `
+Chapter title: ${ch.title}
+Chapter summary: ${ch.summary}
+Scene summary: ${scene} ${
+      chNum == 1 && sceneNum == 1
+        ? "\nWrite details about what the character in the scene and their environment looks like."
+        : ""
+    }`;
+
+  const sceneInfo = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+  });
+
+  const fname = `ch-${chNum}-sc-${sceneNum}.md`;
+
+  await fs.writeFile(
+    `${dirName}/src/${fname}`,
+    sceneInfo.data.choices[0].message?.content as string
+  );
+
+  console.log(`wrote chapter ${chNum} scene ${sceneNum}`);
+
+  return fname;
 };
