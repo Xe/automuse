@@ -150,6 +150,10 @@ program
       console.error(`plot summary does not exist in ${dir}, run genChapterScenes?`);
       process.exit(1);
     }
+    if (fileExists(`${dir}/fnames.json`)) {
+      console.error(`file name list already exists in ${dir}`);
+      process.exit(1);
+    }
 
     await fs.mkdir(`${dir}/src`, { recursive: true });
 
@@ -162,7 +166,9 @@ program
 
     for (let [chNum, ch] of chapters.entries()) {
       chNum = chNum + 1;
-      await fs.writeFile(`${dir}/src/ch-${chNum}-sc-00.md`, `# ${ch.title}\n\n`);
+      const fname = `ch-${chNum}-sc-00.md`;
+      fnames.push(fname);
+      await fs.writeFile(`${dir}/src/${fname}`, `# ${ch.title}\n\n`);
       for (let [sceneNum, scene] of ch.sceneDescriptions.entries()) {
         sceneNum = sceneNum + 1;
         fnames.push(await book.writeChapterScene(dir, openai, summary, ch, chNum, sceneNum, scene));
@@ -170,6 +176,7 @@ program
     }
 
     console.log(fnames);
+    await fs.writeFile(`${dir}/fnames.json`, JSON.stringify(fnames, undefined, "  "));
   });
 
 program.parse();
