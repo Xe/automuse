@@ -1,5 +1,5 @@
 import * as fs from "node:fs/promises";
-import { OpenAIApi } from "openai";
+import { ChatCompletionRequestMessage, OpenAIApi } from "openai";
 import PlotGenerator, { Plot } from "@xeserv/plottoriffic";
 
 export const authorBio = `Yasomi Midori is a science fiction author who explores the themes of identity, memory, and technology in her novels. Her debut novel “The Memory Thief” was a critically acclaimed bestseller that captivated readers with its thrilling plot and complex characters. Yasomi also contributes to the Xe Iaso blog as the character Mimi, a hacker and activist who exposes the secrets of the powerful corporations that control the world. Yasomi was born and raised in Tokyo, Japan, where she developed a passion for reading and writing at an early age. She studied computer science and literature at the University of Tokyo, and worked as a software engineer before becoming a full-time writer. She lives in Kyoto with her husband and two cats.`;
@@ -27,6 +27,11 @@ export interface Summary {
   characters: Character[];
 }
 
+interface CompletionObject {
+  role: string;
+  content: string;
+}
+
 export const createPlot = async (dirName: string): Promise<Plot> => {
   const pg = new PlotGenerator({ flipGenders: false });
   const plot = pg.generate();
@@ -42,24 +47,38 @@ export const createAndParseSummary = async (
   plot: Plot
 ): Promise<Summary> => {
   console.log("generating plot summary");
-  const promptBase = `Write me the following about the following plot summary for a novel:
+  const promptBase = [
+    "You are a Novel generation AI, write plot summaries for novels given a specified format.",
+    '- A two two five word novel title in the format of "Title: " followed by two newlines. (Examples: "Fresh Beginnings", "Jared\'s Adventure")',
+    '- A detailed plot summary in the format of "Plot Summary: " followed by two newlines. The story MUST relate to peer to peer networks.',
+    '- A section titled "Chapter Summaries:" followed by two newlines which will follow a specified structure.',
+    "\t- A markdown style list of very detailed summaries of each chapter. Each must be 3 sentences and have a title for each chapter. There MUST be 15 chapters. Each chapter must tie in to the overaching plot summary. They should follow a specified format.",
+    '\t\t- Each chapter section should be in the format of "Chapter Name: Chapter summary." followed with a single newline.',
+  ];
 
-- A two to five word title for the novel starting with "Title: " and followed by two newlines. For example: "Fresh Beginnings" or "Jared's Adventure through Crime".
-- A detailed plot summary for the story starting with "Plot Summary: " and followed by two newlines. The plot summary should be on the same line as the prefix. Adapt the story to be about peer to peer networks somehow.
-- The string "Chapter Summaries" followed by two newlines.
-- A markdown list of detailed chapter summaries in at least 3 sentences and titles for each of the 15 chapters that a novel based on the plot summary would have. Surround each chapter title in quotes and put a dash after the name like this:
+  /* Create the messages array */
+  var messages: Array<ChatCompletionRequestMessage> = new Array<ChatCompletionRequestMessage>();
 
-- Chapter name - Chapter summary goes here. More words in the summary go here.
-- Second chapter name - Second chapter summary goes here.`;
+  const promptObject: ChatCompletionRequestMessage = {
+    role: "user",
+    content: `${plot.plot}`,
+  };
+
+  /* Push the messages into the array */
+  promptBase.map((message) => {
+    const systemObject: ChatCompletionRequestMessage = {
+      role: "system",
+      content: `${message}`,
+    };
+
+    messages.push(systemObject);
+  });
+
+  messages.push(promptObject);
 
   const summary = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
-    messages: [
-      {
-        role: "user",
-        content: promptBase + "\n\n" + plot.plot,
-      },
-    ],
+    messages: messages,
   });
 
   if (!!summary.data.usage) {
