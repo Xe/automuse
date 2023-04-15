@@ -135,7 +135,7 @@ export const createChapterScenes = async (
   console.log(`creating chapter scene information for chapter ${ch.title}`);
 
   const prompt =
-    `Given the following plot summary, character information, and chapter information, write descriptions of scenes that would happen in that chapter. End each description with two newlines. Write at least 4 scenes. DO NOT only write one scene. Use detail and be creative. DO NOT include the chapter title in your output. ONLY output the scenes separated by newlines like this.
+    `Given the following plot summary, character information, and chapter information, write descriptions of scenes that would happen in that chapter. End each description with two newlines. Write at least 6 scenes. DO NOT only write one scene. Use detail and be creative. DO NOT include the chapter title in your output. ONLY output the scenes separated by newlines like this.
 
 What happens first.
 
