@@ -75,7 +75,7 @@ export const createAndParseSummary = async (
 
   const titleRegex = /^Title: (.+)$/gm;
   const plotSummaryRegex = /^Plot Summary: (.+)$/gm;
-  const chapterSummaryRegex = /^- (.+) - (.+)$/gm;
+  const chapterSummaryRegex = /^- (.+) ?- (.+)$/gm;
 
   let title = summaryText?.split("\n", 2)[0].split(titleRegex)[1] as string;
 
@@ -113,33 +113,11 @@ export const createAndParseSummary = async (
   };
 
   for (const ch of plot.cast) {
-    console.log(ch);
-    const prompt = `Given the following plot summary and character information, write a two-sentence summary of that character and create plausible character details and an appearance for them. Don't include anything but the summary. Adapt the character's story to be about peer to peer networks somehow.
-
-  Plot summary: ${plotSummary}
-  Character name: ${ch.name} (${ch.symbol})
-  Character role: ${ch.description}`;
-
-    console.log(`getting information for ${ch.name} (${ch.symbol} - ${ch.description})`);
-
-    const chInfo = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    });
-
-    const chInfoText = chInfo.data.choices[0].message?.content;
-    console.log(`${ch.name}: ${chInfoText}`);
-
     bookInfo.characters.push({
       name: ch.name,
       symbol: ch.symbol,
       role: ch.description,
-      desc: chInfoText as string,
+      desc: "",
     });
   }
 
