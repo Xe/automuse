@@ -207,6 +207,7 @@ title: "${summary.title}"
 author: Midori Yasomi
 rights: All rights reserved
 language: en-US
+cover-image: ${dir}/cover.jpg
 ---
 `
     );

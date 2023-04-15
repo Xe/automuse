@@ -46,7 +46,7 @@
           '';
         };
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [ nodejs-18_x pandoc typstWithIosevka ];
+          buildInputs = with pkgs; [ nodejs-18_x pandoc typstWithIosevka calibre ];
           shellHook = ''
             export PATH="$PATH":$(pwd)/node_modules/.bin
           '';
