@@ -220,4 +220,24 @@ language: en-US
     console.log(await execa("pandoc", args));
   });
 
+program
+  .command("writeOneScene <dir>")
+  .description("write a single scene of the novel, useful for debugging the generation process")
+  .action(async (dir) => {
+    await fs.mkdir(`${dir}/src`, { recursive: true });
+
+    const summary: book.Summary = JSON.parse(await fs.readFile(`${dir}/summary.json`, "utf8"));
+    const chapters: book.Chapter[] = JSON.parse(
+      await fs.readFile(`${dir}/chapterScenes.json`, "utf8")
+    );
+
+    const chNum = 1;
+    const sceneNum = 2;
+
+    const ch = chapters[chNum - 1];
+    const scene = ch.sceneDescriptions[sceneNum - 1];
+
+    await book.writeChapterScene(dir, openai, summary, ch, chNum, sceneNum, scene);
+  });
+
 program.parse();

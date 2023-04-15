@@ -190,6 +190,15 @@ Chapter summary: ${ch.summary}`;
   };
 };
 
+const getLastLine = (str: string): string => {
+  const lastLineIndex = str.lastIndexOf("\n");
+  if (lastLineIndex === -1) {
+    return str;
+  } else {
+    return str.slice(lastLineIndex + 1);
+  }
+};
+
 // https://pandoc.org/epub.html
 export const writeChapterScene = async (
   dirName: string,
@@ -213,7 +222,7 @@ Scene summary: ${scene} ${
         : ""
     }`;
 
-  const sceneInfo = await openai.createChatCompletion({
+  let sceneInfo = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
     messages: [
       {
@@ -223,12 +232,31 @@ Scene summary: ${scene} ${
     ],
   });
 
+  let prose = sceneInfo.data.choices[0].message?.content as string;
+
+  sceneInfo = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+      {
+        role: "assistant",
+        content: getLastLine(prose),
+      },
+      {
+        role: "user",
+        content: "Continue writing the story.",
+      },
+    ],
+  });
+
+  prose = (prose + "\n\n" + sceneInfo.data.choices[0].message?.content) as string;
+
   const fname = `ch-${chNum}-sc-${sceneNum}.md`;
 
-  await fs.writeFile(
-    `${dirName}/src/${fname}`,
-    sceneInfo.data.choices[0].message?.content as string
-  );
+  await fs.writeFile(`${dirName}/src/${fname}`, prose);
 
   console.log(`wrote chapter ${chNum} scene ${sceneNum}`);
 
