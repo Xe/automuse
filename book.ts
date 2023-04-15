@@ -47,7 +47,7 @@ export const createAndParseSummary = async (
 - A two to five word title for the novel starting with "Title: " and followed by two newlines. For example: "Fresh Beginnings" or "Jared's Adventure through Crime".
 - A detailed plot summary for the story starting with "Plot Summary: " and followed by two newlines. The plot summary should be on the same line as the prefix. Adapt the story to be about peer to peer networks somehow.
 - The string "Chapter Summaries" followed by two newlines.
-- A markdown list of detailed chapter summaries in at least 3 sentences and titles for each of the 10 chapters that a novel based on the plot summary would have. Surround each chapter title in quotes and put a dash after the name like this:
+- A markdown list of detailed chapter summaries in at least 3 sentences and titles for each of the 15 chapters that a novel based on the plot summary would have. Surround each chapter title in quotes and put a dash after the name like this:
 
 - Chapter name - Chapter summary goes here. More words in the summary go here.
 - Second chapter name - Second chapter summary goes here.`;
