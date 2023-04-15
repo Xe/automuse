@@ -232,6 +232,37 @@ language: en-US
   });
 
 program
+  .command("rewriteChapter <dir> <chapter>")
+  .description("completely rewrite a single chapter, useful for fixing the generation process")
+  .action(async (dir, chapterStr) => {
+    await fs.mkdir(`${dir}/src`, { recursive: true });
+
+    const chapter = parseInt(chapterStr);
+    console.log({ dir, chapter });
+
+    const summary: book.Summary = JSON.parse(await fs.readFile(`${dir}/summary.json`, "utf8"));
+    const chapters: book.Chapter[] = JSON.parse(
+      await fs.readFile(`${dir}/chapterScenes.json`, "utf8")
+    );
+
+    const ch = await book.createChapterScenes(
+      dir,
+      openai,
+      summary,
+      summary.chapterList[chapter - 1]
+    );
+
+    chapters[chapter - 1] = ch;
+
+    await fs.writeFile(`${dir}/chapterScenes.json`, JSON.stringify(chapters));
+
+    for (let [sceneNum, scene] of ch.sceneDescriptions.entries()) {
+      sceneNum = sceneNum + 1;
+      console.log(await book.writeChapterScene(dir, openai, summary, ch, chapter, sceneNum, scene));
+    }
+  });
+
+program
   .command("writeOneScene <dir>")
   .description("write a single scene of the novel, useful for debugging the generation process")
   .action(async (dir) => {
