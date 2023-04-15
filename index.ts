@@ -213,11 +213,22 @@ language: en-US
 
     await fs.writeFile(`${dir}/src/aboutAuthor.txt`, "---\n\n" + book.authorBio);
 
-    let args = ["-o", `${dir}/ebook.epub`, "--to", "epub", `${dir}/src/title.txt`];
-    args = args.concat(fnames.map((fname) => `${dir}/src/${fname}`));
-    args = args.concat([`${dir}/src/aboutAuthor.txt`]);
+    let files = [`${dir}/src/title.txt`];
+    files = files.concat(fnames.map((fname) => `${dir}/src/${fname}`));
+    files = files.concat([`${dir}/src/aboutAuthor.txt`]);
 
-    console.log(await execa("pandoc", args));
+    let args = ["-o", `${dir}/ebook.epub`, "--to", "epub"];
+    args = args.concat(files);
+    await execa("pandoc", args);
+
+    args = ["-o", `${dir}/ebook.html`, "--to", "html"];
+    args = args.concat(files);
+    await execa("pandoc", args);
+
+    args = ["--lua-filter", "./wordcount.lua"];
+    args = args.concat(files);
+    const { stdout } = await execa("pandoc", args);
+    console.log(stdout);
   });
 
 program
