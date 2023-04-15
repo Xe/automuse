@@ -27,11 +27,6 @@ export interface Summary {
   characters: Character[];
 }
 
-interface CompletionObject {
-  role: string;
-  content: string;
-}
-
 export const createPlot = async (dirName: string): Promise<Plot> => {
   const pg = new PlotGenerator({ flipGenders: false });
   const plot = pg.generate();
