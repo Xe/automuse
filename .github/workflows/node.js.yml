@@ -19,6 +19,7 @@ jobs:
       with:
         node-version: 18.x
         cache: 'npm'
+    - run: npm config set -- '//tulpa.dev/api/packages/ebooks/npm/:_authToken' "${{ secrets.GITEA_TOKEN }}"
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
