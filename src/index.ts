@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import * as dotenv from "dotenv";
 import { Configuration, OpenAIApi } from "openai";
-import { Plot } from "@xeserv/plottoriffic";
+import { Plot } from "@ebooks/plottoriffic";
 import { generateName } from "@kotofurumiya/th-namegen";
 import * as fs from "node:fs/promises";
 import { existsSync as fileExists } from "fs";

@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import { OpenAIApi } from "openai";
-import PlotGenerator, { Plot } from "@xeserv/plottoriffic";
+import PlotGenerator, { Plot } from "@ebooks/plottoriffic";
 
 export const authorBio = `Yasomi Midori is a science fiction author who explores the themes of identity, memory, and technology in her novels. Her debut novel “The Memory Thief” was a critically acclaimed bestseller that captivated readers with its thrilling plot and complex characters. Yasomi also contributes to the Xe Iaso blog as the character Mimi, a hacker and activist who exposes the secrets of the powerful corporations that control the world. Yasomi was born and raised in Tokyo, Japan, where she developed a passion for reading and writing at an early age. She studied computer science and literature at the University of Tokyo, and worked as a software engineer before becoming a full-time writer. She lives in Kyoto with her husband and two cats.`;
 

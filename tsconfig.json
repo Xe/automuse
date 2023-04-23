@@ -12,5 +12,6 @@
     "types": ["node"],
     "outDir": "dist"
   },
+  "include": ["src/**/*", "tests/**/*", "types/**/*"],
   "exclude": ["node_modules"]
 }

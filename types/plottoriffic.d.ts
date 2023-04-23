@@ -1,4 +1,4 @@
-declare module "@xeserv/plottoriffic" {
+declare module "@ebooks/plottoriffic" {
   export default PlotGenerator;
 
   export type Character = {

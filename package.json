@@ -4,6 +4,7 @@
   "description": "Xe's automatic novel generation muse using Plotto and ChatGPT",
   "main": "dist/index.js",
   "scripts": {
+    "build": "tsc",
     "start": "tsc && node dist/index.js",
     "test": "mocha",
     "prepare": "husky install"
