@@ -1,5 +1,5 @@
 {
-  "name": "@xeserv/automuse",
+  "name": "@ebooks/automuse",
   "version": "0.0.1",
   "description": "Xe's automatic novel generation muse using Plotto and ChatGPT",
   "main": "dist/index.js",
@@ -28,8 +28,8 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "@ebooks/plottoriffic": "^2.2.0",
     "@kotofurumiya/th-namegen": "^1.1.3",
-    "@xeserv/plottoriffic": "^2.2.0",
     "commander": "^10.0.0",
     "dotenv": "^16.0.3",
     "execa": "^7.1.1",
