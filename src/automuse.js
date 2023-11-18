@@ -57,7 +57,7 @@ The characters in the book are:
 
 ${characters.map((ch) => `${ch.name}\n\n${ch.description}`).join("\n\n")}
 
-Include realistic dialogue. Be creative. Write something that has an outstanding plotline, engaging characters and unexpected climaxes`,
+Include realistic dialogue. Be creative and descriptive. Use a lot of detail. Write something that has an outstanding plotline, engaging characters and unexpected climaxes`,
   prose: (sceneInfo) => sceneInfo,
 };
 
@@ -209,21 +209,31 @@ program
     const assistantMessage = messages.find((message) => message.role === "assistant");
     const text = assistantMessage.content[0].text.value.split("\n\n");
 
+    await fs.writeFile(`${options.dir}/summary.txt`, assistantMessage.content[0].text.value);
+
     const titleExtractionRegex = /^"(.*)"$/;
     const title = text[1].split(titleExtractionRegex)[1];
 
     const summary = text[3];
 
+    console.log();
+
     const chapterSummaryExtractionRegex = /^- "(.*)" - (.*)$/;
 
-    const chapterSummaries = text.slice(5).map((chapter) => {
-      const chapterTitle = chapter.split(chapterSummaryExtractionRegex)[1];
-      const chapterSummary = chapter.split(chapterSummaryExtractionRegex)[2].trim();
-      return {
-        title: chapterTitle,
-        summary: chapterSummary,
-      };
-    });
+    const chapterSummaries = text
+      .slice(5)
+      .join("")
+      .split("\n")
+      .filter((line) => line.trim() !== "")
+      .map((chapter) => {
+        const chapterTitle = chapter.split(chapterSummaryExtractionRegex)[1];
+        //console.log(chapter.split(chapterSummaryExtractionRegex));
+        const chapterSummary = chapter.split(chapterSummaryExtractionRegex)[2];
+        return {
+          title: chapterTitle,
+          summary: chapterSummary,
+        };
+      });
 
     const plotSummary = {
       title,
@@ -231,8 +241,6 @@ program
       chapterSummaries,
       characters: plot.cast,
     };
-
-    console.log(plotSummary);
 
     await fs.writeFile(`${options.dir}/${options.summary}`, JSON.stringify(plotSummary, null, 2));
   });
@@ -394,7 +402,10 @@ program
   .option("-s, --summary <summary>", "the summary JSON file", "summary.json")
   .option("--openai-model <openaiModel>", "the OpenAI model to use", "gpt-4-1106-preview")
   .option("--dir <dir>", "the directory to use for the project", "./var/am2")
+  .option("--resume-from <resumeFrom>", "the scene to resume from")
+  .option("--resume-from-thread <threadId>", "the thread ID to resume from")
   .action(async (options) => {
+    console.log(options);
     const plot = JSON.parse(await fs.readFile(`${options.dir}/${options.plot}`));
     const summary = JSON.parse(await fs.readFile(`${options.dir}/${options.summary}`));
     const summaryAssistant = JSON.parse(await fs.readFile(`${options.dir}/assistant.json`));
@@ -412,7 +423,7 @@ program
       };
     });
 
-    const chapterScenes = (await readFiles(`${options.dir}/chapters`))
+    let chapterScenes = (await readFiles(`${options.dir}/chapters`))
       .map((ch) => {
         const chapter = ch.filename;
         const title = summary.chapterSummaries[chapter].title;
@@ -442,12 +453,21 @@ program
       metadata,
     });
 
-    const thread = await openai.beta.threads.create({ metadata });
+    let thread = await openai.beta.threads.create({ metadata });
 
     let step = 1;
-    let lastChapterTitle = "";
+    let lastChapterTitle = "The Heavy Bandwidth of Truth";
+
+    if (options.resumeFrom !== null) {
+      chapterScenes = chapterScenes.slice(options.resumeFrom - 1);
+      step = options.resumeFrom;
+      thread = await openai.beta.threads.retrieve(options.resumeFromThread);
+    }
 
     for (const scene of chapterScenes) {
+      if (scene.title !== lastChapterTitle) {
+        thread = await openai.beta.threads.create({ metadata });
+      }
       const scenePrompt = systemPrompt.prose(scene.scene);
 
       const sceneMessage = await openai.beta.threads.messages.create(thread.id, {
@@ -495,11 +515,11 @@ program
       }
 
       await fs.writeFile(
-        `${options.dir}/src/${scene.chapter}_${step}.md`,
-        `${printTitle ? `# ${scene.title}\n\n` : ""} ${assistantMessage.content[0].text.value}`
+        `${options.dir}/src/${step}.md`,
+        `${printTitle ? `## ${scene.title}\n\n` : ""} ${assistantMessage.content[0].text.value}`
       );
 
-      console.log(`Wrote ${options.dir}/src/${scene.chapter}_${step}.md`);
+      console.log(`Wrote ${options.dir}/src/${step}.md`);
 
       step++;
     }
@@ -586,6 +606,14 @@ cover-image: ./cover.png
 
 ${authorBio}`
     );
+  });
+
+program
+  .command("openai:run:status")
+  .argument("<threadId>", "the thread ID to check the status of")
+  .argument("<runId>", "the run ID to check the status of")
+  .action(async (threadId, runId) => {
+    console.log(await openai.beta.threads.runs.retrieve(threadId, runId));
   });
 
 program.parse();
