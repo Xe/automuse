@@ -8,6 +8,8 @@ import PlotGenerator from "@ebooks/plottoriffic";
 import catches from "./additional_catches.json" assert { type: "json" };
 import { sleep } from "openai/core";
 import { faker } from "@faker-js/faker";
+import { execa } from "execa";
+import { createWriteStream } from "node:fs";
 
 dotenv.config();
 const packageInfo = await readPackage();
@@ -501,6 +503,89 @@ program
 
       step++;
     }
+  });
+
+program
+  .command("ebook:cover")
+  .description("Generate a cover for the novel")
+  .option("--dalle-model <dalleModel>", "the dall-e model to use", "dall-e-3")
+  .option("--openai-model <openaiModel>", "the OpenAI model to use", "gpt-3.5-turbo")
+  .option("--dir <dir>", "the directory to use for the project", "./var/am2")
+  .option("--plot <plot>", "the plotto plot JSON file", "plot.json")
+  .option("--summary <summary>", "the summary JSON file", "summary.json")
+  .action(async (options) => {
+    const summary = JSON.parse(await fs.readFile(`${options.dir}/${options.summary}`));
+    const plot = JSON.parse(await fs.readFile(`${options.dir}/${options.plot}`));
+
+    const imagePrompt = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an illustrator working on a novel. You will be given the novel summary and return a detailed and comprehensive DALL-E prompt that will be used to generate the cover image. Only include the text in your response.",
+        },
+        {
+          role: "user",
+          content: summary.summary,
+        },
+      ],
+      model: options.openaiModel,
+    });
+
+    console.log(imagePrompt.choices[0].message.content);
+
+    const coverResp = await openai.images.generate({
+      model: options.dalleModel,
+      prompt: imagePrompt.choices[0].message.content,
+      quality: "hd",
+      size: "1024x1792",
+      style: "natural",
+    });
+
+    const coverURL = coverResp.data[0].url;
+    console.log(coverURL);
+    const resp = fetch(coverURL);
+
+    const fileStream = createWriteStream(`${options.dir}/cover.png`);
+    await new Promise((resolve, reject) => {
+      resp.body.pipe(fileStream);
+      resp.body.on("error", reject);
+      fileStream.on("finish", resolve);
+    });
+  });
+
+program
+  .command("ebook:prepare")
+  .description("Compile the novel into an ebook")
+  .option("--dir <dir>", "the directory to use for the project", "./var/am2")
+  .option("-p, --plot <plotFname>", "the plotto plot JSON file", "plot.json")
+  .option("-s, --summary <summaryFname>", "the summary JSON file", "summary.json")
+  .option("--openai-model <openaiModel>", "the OpenAI model to use", "gpt-4-1106-preview")
+  .action(async (options) => {
+    const summary = JSON.parse(await fs.readFile(`${options.dir}/${options.summary}`));
+    const plot = JSON.parse(await fs.readFile(`${options.dir}/${options.plot}`));
+
+    await fs.writeFile(
+      `${options.dir}/title.txt`,
+      `---
+title: "${summary.title}"
+author: Midori Yasomi
+rights: All rights reserved
+language: en-US
+cover-image: ./cover.png
+---`
+    );
+
+    await fs.writeFile(
+      `${options.dir}/author_info.md`,
+      `---
+
+# About the Author
+
+![](./yasomi.png)
+
+${authorBio}`
+    );
   });
 
 program.parse();
