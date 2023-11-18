@@ -1,6 +1,6 @@
 {
   "name": "@ebooks/automuse",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Xe's automatic novel generation muse using Plotto and ChatGPT",
   "main": "dist/index.js",
   "scripts": {
@@ -30,11 +30,12 @@
   },
   "dependencies": {
     "@ebooks/plottoriffic": "^2.2.0",
+    "@faker-js/faker": "^8.3.1",
     "@kotofurumiya/th-namegen": "^1.1.3",
     "commander": "^10.0.0",
     "dotenv": "^16.0.3",
     "execa": "^7.1.1",
-    "openai": "^3.2.1",
+    "openai": "^4.19.0",
     "read-pkg": "^8.0.0"
   },
   "lint-staged": {

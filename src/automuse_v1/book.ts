@@ -1,5 +1,5 @@
 import * as fs from "node:fs/promises";
-import { OpenAIApi } from "openai";
+import OpenAI from "openai";
 import PlotGenerator, { Plot } from "@ebooks/plottoriffic";
 
 export const authorBio = `Yasomi Midori is a science fiction author who explores the themes of identity, memory, and technology in her novels. Her debut novel “The Memory Thief” was a critically acclaimed bestseller that captivated readers with its thrilling plot and complex characters. Yasomi also contributes to the Xe Iaso blog as the character Mimi, a hacker and activist who exposes the secrets of the powerful corporations that control the world. Yasomi was born and raised in Tokyo, Japan, where she developed a passion for reading and writing at an early age. She studied computer science and literature at the University of Tokyo, and worked as a software engineer before becoming a full-time writer. She lives in Kyoto with her husband and two cats.`;
@@ -31,14 +31,14 @@ export const createPlot = async (dirName: string): Promise<Plot> => {
   const pg = new PlotGenerator({ flipGenders: false });
   const plot = pg.generate();
 
-  await fs.writeFile(`${dirName}/plotto.json`, JSON.stringify(plot));
+  await fs.writeFile(`${dirName}/plotto.json`, JSON.stringify(plot, null, 2));
 
   return plot;
 };
 
 export const createAndParseSummary = async (
   dirName: string,
-  openai: OpenAIApi,
+  openai: OpenAI,
   plot: Plot
 ): Promise<Summary> => {
   console.log("generating plot summary");
@@ -52,7 +52,7 @@ export const createAndParseSummary = async (
 - Chapter name - Chapter summary goes here. More words in the summary go here.
 - Second chapter name - Second chapter summary goes here.`;
 
-  const summary = await openai.createChatCompletion({
+  const summary = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
       {
@@ -69,7 +69,7 @@ export const createAndParseSummary = async (
     );
   }
 
-  const summaryText = summary.data.choices[0].message?.content;
+  const summaryText = summary.choices[0].message?.content;
 
   await fs.writeFile(`${dirName}/summary.txt`, summaryText as string);
 
@@ -128,7 +128,7 @@ export const createAndParseSummary = async (
 
 export const createChapterScenes = async (
   dirName: string,
-  openai: OpenAIApi,
+  openai: OpenAI,
   summary: Summary,
   ch: ChapterListItem
 ): Promise<Chapter> => {
@@ -149,7 +149,7 @@ Character information:
 Chapter title: ${ch.title}
 Chapter summary: ${ch.summary}`;
 
-  const chInfo = await openai.createChatCompletion({
+  const chInfo = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
       {
@@ -159,7 +159,7 @@ Chapter summary: ${ch.summary}`;
     ],
   });
 
-  const chInfoText = chInfo.data.choices[0].message?.content as string;
+  const chInfoText = chInfo.choices[0].message?.content as string;
 
   return {
     title: ch.title,
@@ -180,7 +180,7 @@ const getLastLine = (str: string): string => {
 // https://pandoc.org/epub.html
 export const writeChapterScene = async (
   dirName: string,
-  openai: OpenAIApi,
+  openai: OpenAI,
   summary: Summary,
   ch: Chapter,
   chNum: number,
@@ -200,7 +200,7 @@ Scene summary: ${scene} ${
         : ""
     }`;
 
-  let sceneInfo = await openai.createChatCompletion({
+  let sceneInfo = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
       {
@@ -210,9 +210,9 @@ Scene summary: ${scene} ${
     ],
   });
 
-  let prose = sceneInfo.data.choices[0].message?.content as string;
+  let prose = sceneInfo.choices[0].message?.content as string;
 
-  sceneInfo = await openai.createChatCompletion({
+  sceneInfo = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
       {
@@ -230,7 +230,7 @@ Scene summary: ${scene} ${
     ],
   });
 
-  prose = (prose + "\n\n" + sceneInfo.data.choices[0].message?.content) as string;
+  prose = (prose + "\n\n" + sceneInfo.choices[0].message?.content) as string;
 
   const fname = `ch-${chNum}-sc-${sceneNum}.md`;
 

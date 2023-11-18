@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import * as dotenv from "dotenv";
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 import { Plot } from "@ebooks/plottoriffic";
 import { generateName } from "@kotofurumiya/th-namegen";
 import * as fs from "node:fs/promises";
@@ -13,10 +13,9 @@ import * as book from "./book.js";
 dotenv.config();
 const packageInfo = await readPackage();
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 const program = new Command();
 
