@@ -404,6 +404,7 @@ program
   .option("--dir <dir>", "the directory to use for the project", "./var/am2")
   .option("--resume-from <resumeFrom>", "the scene to resume from")
   .option("--resume-from-thread <threadId>", "the thread ID to resume from")
+  .option("--only-chapter <name>", "only write the chapter with the given name to ./src/ch")
   .action(async (options) => {
     console.log(options);
     const plot = JSON.parse(await fs.readFile(`${options.dir}/${options.plot}`));
@@ -456,12 +457,20 @@ program
     let thread = await openai.beta.threads.create({ metadata });
 
     let step = 1;
-    let lastChapterTitle = "The Heavy Bandwidth of Truth";
+    let lastChapterTitle = "";
 
-    if (options.resumeFrom !== null) {
+    if (options.resumeFrom !== undefined) {
       chapterScenes = chapterScenes.slice(options.resumeFrom - 1);
       step = options.resumeFrom;
+    }
+
+    if (options.resumeFromThread !== undefined) {
       thread = await openai.beta.threads.retrieve(options.resumeFromThread);
+    }
+
+    if (options.onlyChapter !== null) {
+      chapterScenes = chapterScenes.filter((scene) => scene.title === options.onlyChapter);
+      console.log(chapterScenes);
     }
 
     for (const scene of chapterScenes) {
@@ -497,6 +506,7 @@ program
       while (status.status !== "completed") {
         await sleep(1000);
         status = await openai.beta.threads.runs.retrieve(run.thread_id, run.id);
+        console.log(status.status);
       }
 
       const threadMessages = await openai.beta.threads.messages.list(run.thread_id, { limit: 1 });
@@ -515,11 +525,11 @@ program
       }
 
       await fs.writeFile(
-        `${options.dir}/src/${step}.md`,
+        `${options.dir}/src/${options.onlyChapter ? "ch/" : ""}${step}.md`,
         `${printTitle ? `## ${scene.title}\n\n` : ""} ${assistantMessage.content[0].text.value}`
       );
 
-      console.log(`Wrote ${options.dir}/src/${step}.md`);
+      console.log(`Wrote ${options.dir}/src/${options.onlyChapter ? "ch/" : ""}${step}.md`);
 
       step++;
     }
