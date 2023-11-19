@@ -40,3 +40,11 @@
   set align(left)
   columns(2, doc)
 }
+
+#let quote(body) = [
+  #box(
+    fill: silver,
+    inset: 5pt,
+  )[#text(size: 9pt)[#body]]
+]
+  

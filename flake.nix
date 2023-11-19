@@ -26,8 +26,7 @@
         in pkgs.writeShellApplication {
           name = "typst";
           text = ''
-            ${pkgs.typst-dev}/bin/typst \
-            --font-path ${fontsConf} \
+            exec ${pkgs.typst-dev}/bin/typst \
             "$@"
           '';
           runtimeInputs = [ ];
@@ -50,6 +49,7 @@
           shellHook = ''
             export PATH="$PATH":$(pwd)/node_modules/.bin
           '';
+          FONT_PATH="${self.packages.${system}.iosevka}";
         };
       });
 }
